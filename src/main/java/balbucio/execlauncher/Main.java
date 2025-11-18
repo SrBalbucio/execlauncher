@@ -41,8 +41,8 @@ public class Main {
 
     public void showError(Exception throwable) {
         ui.showException(
-                "Execlauncher encountered problems during execution!",
                 "Check below for the cause of this failure; Execlauncher will likely continue to function. Check the status on the Execlauncher main screen.",
+                "Execlauncher encountered problems during execution!",
                 throwable);
     }
 

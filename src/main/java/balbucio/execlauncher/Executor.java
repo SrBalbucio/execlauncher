@@ -114,7 +114,9 @@ public class Executor {
         executable.setInputStream(null);
         this.processes.remove(executable);
         Thread thread = this.threads.remove(executable);
-        if (thread != null && thread.isAlive()) thread.interrupt();
+        try {
+            if (thread != null && thread.isAlive()) thread.interrupt();
+        } catch (Exception ignored){}
         main.getMainFrame().update();
         main.getTray().update();
 
