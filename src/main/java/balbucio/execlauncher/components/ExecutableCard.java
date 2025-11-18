@@ -75,7 +75,7 @@ public class ExecutableCard extends JPanel {
 //        panel.add(edit);
 
         JButton remove = new JButton("🗑️");
-        remove.setPreferredSize(new Dimension(60, 25));
+        remove.setPreferredSize(new Dimension(60, 28));
         remove.addActionListener(e -> Main.instance.getUi().showConfirmDialog(
                 "Do you really want this action?",
                 "Are you sure?",
