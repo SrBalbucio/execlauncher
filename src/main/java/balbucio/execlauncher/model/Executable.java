@@ -39,6 +39,7 @@ public class Executable {
     private BufferedWriter outputWriter;
     private InputStream errorStream;
     private InputStream inputStream;
+    private StringBuilder logs = new StringBuilder();
     private LogsFrame logsFrame;
 
     public File getFilePath() {
@@ -100,11 +101,23 @@ public class Executable {
 
     public void showLogsFrame() {
         LogsFrame logsFrame = this.getLogsFrame();
-        if (logsFrame != null && logsFrame.isVisible()) {
+
+        if (logsFrame != null) {
+            logsFrame.setVisible(true);
             logsFrame.requestFocus();
         } else {
-            this.setLogsFrame(new LogsFrame(this));
+            createLogsFrame();
+            this.logsFrame.setVisible(true);
+            this.logsFrame.initLogStream();
         }
+    }
 
+    public void createLogsFrame() {
+        if (this.logsFrame != null) return;
+        this.logsFrame = new LogsFrame(this);
+    }
+
+    public void closeLogsFrame() {
+        if (logsFrame != null) logsFrame.setVisible(false);
     }
 }

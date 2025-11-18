@@ -22,6 +22,7 @@ public class Executor {
     private final Main main;
     private final List<Executable> saved;
     private Map<Executable, Process> processes = new ConcurrentHashMap<>();
+    private Map<Executable, Thread> threads = new ConcurrentHashMap<>();
     private ScheduledExecutorService executor;
 
     public Executor(Main main) {
@@ -61,7 +62,7 @@ public class Executor {
             processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
             processBuilder.directory(executable.getFilePath());
             processBuilder.environment().putAll(executable.getEnv());
-            executor.submit(() -> {
+            Thread thread = new Thread(() -> {
                 try {
                     Process exitProcess = processBuilder.start();
                     exitProcess.waitFor();
@@ -72,6 +73,8 @@ public class Executor {
                     main.showError(e);
                 }
             });
+            thread.start();
+            threads.put(executable, thread);
         } else {
             postStart(executable, cmd.toString());
         }
@@ -84,32 +87,34 @@ public class Executor {
         processBuilder.redirectError(ProcessBuilder.Redirect.PIPE);
         processBuilder.directory(executable.getFilePath());
         processBuilder.environment().putAll(executable.getEnv());
-        executor.submit(() -> {
-            try {
-                Process process = processBuilder.start();
-                if (executable.isAutoShowLogs()) executable.showLogsFrame();
-                executable.setOutputWriter(process.outputWriter());
-                executable.setErrorStream(process.getErrorStream());
-                executable.setInputStream(process.getInputStream());
-                this.processes.put(executable, process);
-                main.getTray().update();
-                main.getMainFrame().update();
-                process.waitFor();
-                stop(executable);
-            } catch (Exception e) {
-                e.printStackTrace();
-                main.showError(e);
-            }
-        });
+        try {
+            Process process = processBuilder.start();
+            executable.setOutputWriter(process.outputWriter());
+            executable.setErrorStream(process.getErrorStream());
+            executable.setInputStream(process.getInputStream());
+            this.processes.put(executable, process);
+            executable.createLogsFrame();
+            if (executable.isAutoShowLogs()) executable.showLogsFrame();
+            main.getTray().update();
+            main.getMainFrame().update();
+            process.waitFor();
+            stop(executable);
+        } catch (Exception e) {
+            e.printStackTrace();
+            main.showError(e);
+        }
     }
 
     public void stop(Executable executable) {
         Process process = this.processes.get(executable);
         if (process != null && process.isAlive()) process.destroy();
+        if (executable.getLogsFrame() != null) executable.getLogsFrame().stopLogStream();
         executable.setOutputWriter(null);
         executable.setErrorStream(null);
         executable.setInputStream(null);
         this.processes.remove(executable);
+        Thread thread = this.threads.remove(executable);
+        if (thread != null && thread.isAlive()) thread.interrupt();
         main.getMainFrame().update();
         main.getTray().update();
 
@@ -120,7 +125,7 @@ public class Executor {
             processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
             processBuilder.directory(executable.getFilePath());
             processBuilder.environment().putAll(executable.getEnv());
-            executor.submit(() -> {
+            thread = new Thread(() -> {
                 try {
                     Process exitProcess = processBuilder.start();
                     exitProcess.waitFor();
@@ -130,6 +135,7 @@ public class Executor {
                     main.showError(e);
                 }
             });
+            thread.start();
         }
     }
 
@@ -148,4 +154,5 @@ public class Executor {
     public void stopAll() {
         this.saved.forEach(this::stop);
     }
+
 }

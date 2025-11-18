@@ -68,6 +68,12 @@ public class MainFrame extends JFrame {
             panel.add(button);
         }
 
+        {
+            JButton button = new JButton("Exit");
+            button.addActionListener(e -> main.exit());
+            panel.add(button);
+        }
+
         return panel;
     }
 

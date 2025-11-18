@@ -27,7 +27,7 @@ public class LogsFrame extends JFrame implements ComponentListener, ContainerLis
         this.add(getLogs(), BorderLayout.CENTER);
         this.addComponentListener(this);
         this.addContainerListener(this);
-        this.setVisible(true);
+        SwingUtilities.invokeLater(this::initLogStream);
     }
 
     public JPanel getActions() {
@@ -74,6 +74,7 @@ public class LogsFrame extends JFrame implements ComponentListener, ContainerLis
 
     public JScrollPane getLogs() {
         this.textPane = new JTextPane();
+        textPane.setText(this.executable.getLogs().toString());
         this.textPane.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(this.textPane);
         scrollPane.setViewportView(this.textPane);
@@ -81,7 +82,31 @@ public class LogsFrame extends JFrame implements ComponentListener, ContainerLis
     }
 
     public void addLog(String msg) {
-        textPane.setText(textPane.getText() + "\n" + msg);
+        executable.getLogs().append("\n").append(msg);
+        textPane.setText(executable.getLogs().toString());
+    }
+
+    private Thread thread;
+
+    public void initLogStream() {
+        if (executable.getInputStream() == null) return;
+        if (thread != null) thread.interrupt();
+
+        this.thread = new Thread(() -> {
+            Scanner scanner = new Scanner(executable.getInputStream());
+            while (scanner.hasNextLine()) {
+                addLog(scanner.nextLine());
+            }
+            scanner.close();
+        });
+        thread.start();
+    }
+
+    public void stopLogStream() {
+        if (thread == null) return;
+
+        thread.interrupt();
+        thread = null;
     }
 
     @Override
@@ -96,15 +121,6 @@ public class LogsFrame extends JFrame implements ComponentListener, ContainerLis
 
     @Override
     public void componentShown(ComponentEvent componentEvent) {
-        if (executable.getInputStream() == null) return;
-        Thread thread = new Thread(() -> {
-            Scanner scanner = new Scanner(executable.getInputStream());
-            while (scanner.hasNextLine() && isVisible()) {
-                addLog(scanner.nextLine());
-            }
-            scanner.close();
-        });
-        thread.start();
     }
 
     @Override
