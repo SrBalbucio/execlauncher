@@ -2,8 +2,6 @@ package balbucio.execlauncher;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class Tray {
 
@@ -30,7 +28,7 @@ public class Tray {
         return icon;
     }
 
-    public void update(){
+    public void update() {
         icon.setToolTip("Executables currently running: " + main.getExecutor().activeNow());
     }
 

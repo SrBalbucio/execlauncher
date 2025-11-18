@@ -56,7 +56,6 @@ public class Executable {
     public void showVars() {
         System.out.println(env);
         String[][] envs = Main.instance.getUi().showTable(MapUtils.mapToArray2d(this.getEnv()), new String[]{"Key", "Value"}, "Environment Variables");
-        System.out.println(Arrays.deepToString(envs));
         this.setEnv(MapUtils.array2dToMap(envs));
     }
 

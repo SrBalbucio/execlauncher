@@ -49,12 +49,13 @@ public class MainFrame extends JFrame {
 
         {
             JButton button = new JButton("Start All");
-            button.addActionListener((e) -> Executor.getInstance());
+            button.addActionListener((e) -> Executor.getInstance().startAll());
             panel.add(button);
         }
 
         {
             JButton button = new JButton("Stop All");
+            button.addActionListener((e) -> Executor.getInstance().stopAll());
             panel.add(button);
         }
 
