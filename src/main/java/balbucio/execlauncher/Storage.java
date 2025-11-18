@@ -18,10 +18,10 @@ public class Storage {
     @Setter
     private static Storage instance;
 
-    private MVStore mvStore;
-    private Gson gson;
-    private MVMap<String, String> settings;
-    private MVMap<UUID, String> executables;
+    private final MVStore mvStore;
+    private final Gson gson;
+    private final MVMap<String, String> settings;
+    private final MVMap<UUID, String> executables;
 
     public Storage() {
         setInstance(this);
@@ -32,7 +32,12 @@ public class Storage {
                 .autoCompactFillRate(90)
                 .pageSplitSize(65536);
 
-        this.gson = new GsonBuilder().enableComplexMapKeySerialization().serializeNulls().create();
+        this.gson = new GsonBuilder()
+                .excludeFieldsWithoutExposeAnnotation()
+                .enableComplexMapKeySerialization()
+                .serializeNulls()
+                .create();
+
         this.mvStore = builder.open();
         this.settings = mvStore.openMap("settings");
         this.executables = mvStore.openMap("executables");

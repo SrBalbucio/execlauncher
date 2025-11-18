@@ -11,6 +11,7 @@ public class MapUtils {
         int i = 0;
         for (Map.Entry<String, String> entry : map.entrySet()) {
             array[i] = new String[]{entry.getKey(), entry.getValue()};
+            i++;
         }
 
         return array;

@@ -3,54 +3,66 @@ package balbucio.execlauncher.action;
 import balbucio.execlauncher.Executor;
 import balbucio.execlauncher.Main;
 import balbucio.execlauncher.model.Executable;
+import balbucio.execlauncher.utils.JavaUtils;
 import balbucio.execlauncher.utils.MapUtils;
 import de.milchreis.uibooster.model.Form;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Scanner;
 
-public class CreateOrUpdateExecutable {
+public class CreateOrUpdateJavaExecutable {
 
     private final Main main;
     private final Executable executable;
 
-    public CreateOrUpdateExecutable() {
+    public CreateOrUpdateJavaExecutable() {
         this(new Executable());
     }
 
-    public CreateOrUpdateExecutable(Executable executable) {
+    public CreateOrUpdateJavaExecutable(Executable executable) {
         this.executable = executable;
         this.main = Main.instance;
+
         Form form = main.getUi()
                 .createForm("Create or update an executable")
                 .addText("Executable Name:")
-                .addTextArea("Execution commands:")
+                .addSelection("Select Java Home:", new ArrayList<>(JavaUtils.getJavaAvailable().values()))
                 .addButton("Select workspace path", this::selectWorkspacePath)
-                // isto não vai prestar na verdade
-//                .addButton("Select script file (replaces the script body)", this::selectBatchPath)
+                .addButton("Select JAR File", this::selectJar)
                 .addButton("Manage environment variables", executable::showVars)
+                .addButton("Manage command line options", executable::showOptions)
                 .show();
 
         executable.setName(form.getByIndex(0).asString());
-        String scriptBody = form.getByIndex(1).asString();
+        String javaHome = form.getByIndex(1).asString();
 
-        if (scriptBody != null && !scriptBody.isEmpty()) {
-            executable.setCmd(scriptBody);
+        if (javaHome == null) {
+            javaHome = System.getProperty("java.home");
         }
-
-        if (executable.getPath() == null) {
-            main.getUi().showErrorDialog("You need to define the workspace folder for the executable. To add it, use the \"Select workspace path\" button.", "Execlauncher cannot create a new executable.");
-            return;
-        }
-
-        System.out.println(executable);
 
         if (executable.getName() == null || executable.getCmd() == null || executable.getName().isBlank() || executable.getCmd().isBlank()) {
             main.getUi().showErrorDialog("There is missing data; please check that you entered the name and script correctly.", "Execlauncher cannot create a new executable.");
             return;
         }
 
+        File javaHomeFile = new File(javaHome + "/bin/java.exe");
+
+        if (!javaHomeFile.exists()) {
+            main.getUi().showErrorDialog("Java Home " + javaHome + " does not have java.exe available. Please verify that the Java version listed is higher than 8 and is not the version included in installable applications.", "Execlauncher cannot create a new executable.");
+            return;
+        }
+
+        String jarFile = executable.getCmd();
+        StringBuilder cmd = new StringBuilder();
+
+        cmd.append("\"").append(javaHomeFile.getAbsolutePath()).append("\"").append(" ").append("-jar").append(" \"").append(jarFile.replace(executable.getPath() + File.pathSeparator, "")).append("\"");
+
+        executable.setCmd(cmd.toString());
+
+        System.out.println(executable);
         Executor.getInstance().addExecutable(executable);
     }
 
@@ -69,11 +81,10 @@ public class CreateOrUpdateExecutable {
         }
     }
 
-    @Deprecated
-    public void selectBatchPath() {
+    public void selectJar() {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        chooser.setFileFilter(new FileNameExtensionFilter("Script Files", "bat", "sh", "txt"));
+        chooser.setFileFilter(new FileNameExtensionFilter("JAR Files", "jar"));
 
         if (executable.getPath() != null) {
             chooser.setCurrentDirectory(executable.getFilePath());
@@ -83,13 +94,7 @@ public class CreateOrUpdateExecutable {
 
         if (chooser.getSelectedFile() != null) {
             try {
-                StringBuilder builder = new StringBuilder();
-                Scanner scanner = new Scanner(chooser.getSelectedFile());
-                while (scanner.hasNextLine()) {
-                    builder.append(scanner.nextLine()).append("\n");
-                }
-                scanner.close();
-                executable.setCmd(builder.toString());
+                executable.setCmd(chooser.getSelectedFile().getCanonicalPath());
             } catch (Exception e) {
                 main.showError(e);
             }
