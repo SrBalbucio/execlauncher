@@ -4,6 +4,7 @@ import balbucio.execlauncher.ui.MainFrame;
 import de.milchreis.uibooster.UiBooster;
 import lombok.Getter;
 
+import java.awt.*;
 import java.io.File;
 
 @Getter
@@ -12,6 +13,7 @@ public class Main {
     public static File INSTALL_PATH = new File(System.getenv("APPDATA"), "Execlauncher");
     public static File DB_PATH = new File(INSTALL_PATH, "storage.db");
     public static Main instance;
+    public static Desktop desktop = Desktop.getDesktop();
 
     public static void main(String[] args) {
         INSTALL_PATH.mkdirs();

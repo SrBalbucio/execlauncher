@@ -2,6 +2,7 @@ package balbucio.execlauncher.ui;
 
 import balbucio.execlauncher.Executor;
 import balbucio.execlauncher.Main;
+import balbucio.execlauncher.Storage;
 import balbucio.execlauncher.action.CreateOrUpdateExecutable;
 import balbucio.execlauncher.action.CreateOrUpdateJavaExecutable;
 import balbucio.execlauncher.components.ExecutableCard;
@@ -18,6 +19,7 @@ public class MainFrame extends JFrame {
     public MainFrame(Main main) {
         super("Execlauncher");
         this.main = main;
+        this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(HIDE_ON_CLOSE);
         this.setLayout(new BorderLayout());
         this.setMinimumSize(new Dimension(600, 360));
@@ -56,6 +58,15 @@ public class MainFrame extends JFrame {
             panel.add(button);
         }
 
+        {
+            JButton button = new JButton("Import...");
+            button.addActionListener(e -> {
+               String json = main.getUi().showTextInputDialog("Enter the configuration JSON.");
+                Storage.getInstance().importFromJSON(json);
+            });
+            panel.add(button);
+        }
+
         return panel;
     }
 
@@ -66,6 +77,15 @@ public class MainFrame extends JFrame {
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
 
         JScrollPane panel = new JScrollPane(listPanel);
+        JPopupMenu popupMenu = new JPopupMenu();
+
+        {
+            JMenuItem item = new JMenuItem("Refresh...");
+            item.addActionListener((e) -> this.update());
+            popupMenu.add(item);
+        }
+
+        panel.setComponentPopupMenu(popupMenu);
         panel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         return panel;
     }

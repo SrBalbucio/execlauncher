@@ -2,6 +2,7 @@ package balbucio.execlauncher.components;
 
 import balbucio.execlauncher.Executor;
 import balbucio.execlauncher.Main;
+import balbucio.execlauncher.Storage;
 import balbucio.execlauncher.action.CreateOrUpdateExecutable;
 import balbucio.execlauncher.model.Executable;
 import balbucio.execlauncher.ui.LogsFrame;
@@ -9,7 +10,6 @@ import balbucio.execlauncher.utils.FileUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 
@@ -69,26 +69,23 @@ public class ExecutableCard extends JPanel {
         });
         panel.add(run);
 
-        JButton edit = new JButton("✏️");
-        edit.setPreferredSize(new Dimension(50, 25));
-        edit.addActionListener(e -> new CreateOrUpdateExecutable(executable));
-        panel.add(edit);
+//        JButton edit = new JButton("✏️");
+//        edit.setPreferredSize(new Dimension(50, 25));
+//        edit.addActionListener(e -> new CreateOrUpdateExecutable(executable));
+//        panel.add(edit);
 
         JButton remove = new JButton("🗑️");
         remove.setPreferredSize(new Dimension(50, 25));
-        remove.addActionListener(e -> Executor.getInstance().delete(executable));
+        remove.addActionListener(e -> Main.instance.getUi().showConfirmDialog(
+                "Do you really want this action?",
+                "Are you sure?",
+                () -> Executor.getInstance().delete(executable),
+                () -> Main.instance.getMainFrame().update()));
         panel.add(remove);
 
         if (active) {
             JButton showLogs = new JButton("Show Logs");
-            showLogs.addActionListener(e -> {
-                LogsFrame logsFrame = executable.getLogsFrame();
-                if (logsFrame != null && logsFrame.isVisible()) {
-                    logsFrame.requestFocus();
-                } else {
-                    executable.setLogsFrame(new LogsFrame(executable));
-                }
-            });
+            showLogs.addActionListener(e -> executable.showLogsFrame());
             panel.add(showLogs);
         }
 
@@ -97,6 +94,15 @@ public class ExecutableCard extends JPanel {
 
     public JPopupMenu getPopupMenu() {
         JPopupMenu popupMenu = new JPopupMenu();
+
+        JCheckBoxMenuItem autoShow = new JCheckBoxMenuItem("Auto Show Logs", executable.isAutoShowLogs());
+        autoShow.addActionListener(e -> {
+            executable.setAutoShowLogs(autoShow.getState());
+            Storage.getInstance().saveExecutable(executable);
+        });
+        popupMenu.add(autoShow);
+
+        popupMenu.addSeparator();
 
         JMenuItem manageEnv = new JMenuItem("Manage environment variables");
         manageEnv.addActionListener(e -> executable.showVars());
@@ -126,6 +132,30 @@ public class ExecutableCard extends JPanel {
             Main.instance.getStorage().saveExecutable(executable);
         });
         popupMenu.add(addOption);
+        popupMenu.addSeparator();
+
+        JMenuItem startCmds = new JMenuItem("Add start cmds");
+        startCmds.addActionListener(e -> {
+            executable.showStartCmds();
+            Main.instance.getStorage().saveExecutable(executable);
+        });
+        popupMenu.add(startCmds);
+
+        JMenuItem stopCmds = new JMenuItem("Add stop cmds");
+        stopCmds.addActionListener(e -> {
+            executable.showStopCmds();
+            Main.instance.getStorage().saveExecutable(executable);
+        });
+        popupMenu.add(stopCmds);
+
+        popupMenu.addSeparator();
+
+        JMenuItem export = new JMenuItem("Export...");
+        export.addActionListener(e -> {
+            String json = Storage.getInstance().toJSON(executable);
+            Main.instance.getUi().showTextArea("Save the JSON below so you can import this executable into another instance:", "Export executable", json);
+        });
+        popupMenu.add(export);
 
         return popupMenu;
     }

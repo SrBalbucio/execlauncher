@@ -4,6 +4,7 @@ import balbucio.execlauncher.model.Executable;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,19 +47,43 @@ public class Executor {
 
         if (!executable.getOptions().isEmpty()) {
             executable.getOptions().forEach((key, value) -> cmd.append(" \"").append(key).append("=").append(value).append("\""));
-//            cmd.deleteCharAt(cmd.length() - 1);
         }
 
-        System.out.println(cmd.toString());
-        ProcessBuilder processBuilder = new ProcessBuilder(cmd.toString());
+
+        if (!executable.getStartCmds().isEmpty()) {
+            ProcessBuilder processBuilder = new ProcessBuilder(executable.startCmds());
+            processBuilder.redirectErrorStream(true);
+            processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+            processBuilder.directory(executable.getFilePath());
+            processBuilder.environment().putAll(executable.getEnv());
+            executor.submit(() -> {
+                try {
+                    Process exitProcess = processBuilder.start();
+                    exitProcess.waitFor();
+                    main.getMainFrame().update();
+                    postStart(executable, cmd.toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    main.showError(e);
+                }
+            });
+        } else {
+            postStart(executable, cmd.toString());
+        }
+    }
+
+    private void postStart(Executable executable, String cmd) {
+        ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
-        processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
-        processBuilder.redirectError(ProcessBuilder.Redirect.PIPE);
+        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         processBuilder.directory(executable.getFilePath());
         processBuilder.environment().putAll(executable.getEnv());
         executor.submit(() -> {
             try {
                 Process process = processBuilder.start();
+                if (executable.isAutoShowLogs()) executable.showLogsFrame();
                 executable.setOutputWriter(process.outputWriter());
                 executable.setErrorStream(process.getErrorStream());
                 executable.setInputStream(process.getInputStream());
@@ -67,6 +92,7 @@ public class Executor {
                 process.waitFor();
                 stop(executable);
             } catch (Exception e) {
+                e.printStackTrace();
                 main.showError(e);
             }
         });
@@ -80,6 +106,25 @@ public class Executor {
         executable.setInputStream(null);
         this.processes.remove(executable);
         main.getMainFrame().update();
+
+        if (!executable.getStopCmds().isEmpty()) {
+            ProcessBuilder processBuilder = new ProcessBuilder(executable.stopCmds());
+            processBuilder.redirectErrorStream(true);
+            processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+            processBuilder.directory(executable.getFilePath());
+            processBuilder.environment().putAll(executable.getEnv());
+            executor.submit(() -> {
+                try {
+                    Process exitProcess = processBuilder.start();
+                    exitProcess.waitFor();
+                    main.getMainFrame().update();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    main.showError(e);
+                }
+            });
+        }
     }
 
     public void delete(Executable executable) {

@@ -66,4 +66,14 @@ public class Storage {
     public void setSetting(String key, String value) {
         settings.put(key, value);
     }
+
+    public String toJSON(Executable executable) {
+        return gson.toJson(executable);
+    }
+
+    public Executable importFromJSON(String json) {
+        Executable executable =  gson.fromJson(json, Executable.class);
+        saveExecutable(executable);
+        return executable;
+    }
 }
