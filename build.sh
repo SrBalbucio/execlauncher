@@ -47,5 +47,8 @@ jpackage \
   --icon jpackage/assets/icon.ico \
   --app-version "$version" \
   --verbose \
-  --win-dir-chooser
+  --win-dir-chooser \
+  --win-menu \
+  --win-shortcut \
+  --license-file LICENSE
 fi
