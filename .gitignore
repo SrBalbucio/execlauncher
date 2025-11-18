@@ -37,3 +37,8 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+*.exe
+/*.exe
+jpackage/*.jar
+/jpackage/*.jar

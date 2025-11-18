@@ -23,7 +23,7 @@ public class Tray {
     private TrayIcon icon;
 
     public TrayIcon getIcon() {
-        icon = new TrayIcon(Toolkit.getDefaultToolkit().getImage(Tray.class.getResource("/icon.png")));
+        icon = new TrayIcon(Toolkit.getDefaultToolkit().getImage(Tray.class.getResource("/icon_16.png")));
         icon.setPopupMenu(getPopupMenu());
         icon.setToolTip("Executables currently running: " + main.getExecutor().activeNow());
         icon.addActionListener((e) -> main.getMainFrame().open());
