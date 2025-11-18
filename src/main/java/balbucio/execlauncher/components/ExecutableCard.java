@@ -3,15 +3,15 @@ package balbucio.execlauncher.components;
 import balbucio.execlauncher.Executor;
 import balbucio.execlauncher.Main;
 import balbucio.execlauncher.Storage;
-import balbucio.execlauncher.action.CreateOrUpdateExecutable;
 import balbucio.execlauncher.model.Executable;
-import balbucio.execlauncher.ui.LogsFrame;
 import balbucio.execlauncher.utils.FileUtils;
+import balbucio.execlauncher.utils.JavaUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
+import java.util.List;
 
 public class ExecutableCard extends JPanel {
 
@@ -118,8 +118,7 @@ public class ExecutableCard extends JPanel {
 
             if (envFile != null) {
                 executable.addEnvVars(FileUtils.readVars(envFile));
-                System.out.println(executable.getEnv());
-                Main.instance.getStorage().saveExecutable(executable);
+                Storage.getInstance().saveExecutable(executable);
             }
         });
         popupMenu.add(addEnvFile);
@@ -129,7 +128,7 @@ public class ExecutableCard extends JPanel {
         JMenuItem addOption = new JMenuItem("Manage command line options");
         addOption.addActionListener(e -> {
             executable.showOptions();
-            Main.instance.getStorage().saveExecutable(executable);
+            Storage.getInstance().saveExecutable(executable);
         });
         popupMenu.add(addOption);
         popupMenu.addSeparator();
@@ -137,18 +136,40 @@ public class ExecutableCard extends JPanel {
         JMenuItem startCmds = new JMenuItem("Add start cmds");
         startCmds.addActionListener(e -> {
             executable.showStartCmds();
-            Main.instance.getStorage().saveExecutable(executable);
+            Storage.getInstance().saveExecutable(executable);
         });
         popupMenu.add(startCmds);
 
         JMenuItem stopCmds = new JMenuItem("Add stop cmds");
         stopCmds.addActionListener(e -> {
             executable.showStopCmds();
-            Main.instance.getStorage().saveExecutable(executable);
+            Storage.getInstance().saveExecutable(executable);
         });
         popupMenu.add(stopCmds);
 
         popupMenu.addSeparator();
+
+        JMenuItem changeName = new JMenuItem("Change name");
+        changeName.addActionListener(e -> {
+            String name = Main.instance.getUi().showTextInputDialog("What will the new name be?");
+            executable.setName(name);
+            Storage.getInstance().saveExecutable(executable);
+        });
+        popupMenu.add(changeName);
+
+        if (executable.getType() != null && executable.getType().equalsIgnoreCase("Java")) {
+            JMenuItem changeJava = new JMenuItem("Change Java");
+            changeJava.addActionListener(e -> {
+                String javaPath = Main.instance.getUi().showSelectionDialog("Select a new version of Java.", "Change Java", (List<String>) JavaUtils.getJavaAvailable().values());
+
+                String[] cmdParts = executable.getCmd().split(" ");
+                cmdParts[0] = "\"" + javaPath + "\"";
+                executable.setCmd(String.join(" ", cmdParts));
+
+                Storage.getInstance().saveExecutable(executable);
+            });
+            popupMenu.add(changeJava);
+        }
 
         JMenuItem export = new JMenuItem("Export...");
         export.addActionListener(e -> {

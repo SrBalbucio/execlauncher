@@ -1,9 +1,14 @@
 package balbucio.execlauncher;
 
 import balbucio.execlauncher.ui.MainFrame;
+import com.formdev.flatlaf.intellijthemes.FlatCyanLightIJTheme;
+import com.formdev.flatlaf.intellijthemes.FlatGradiantoMidnightBlueIJTheme;
+import com.formdev.flatlaf.intellijthemes.FlatSpacegrayIJTheme;
 import de.milchreis.uibooster.UiBooster;
+import de.milchreis.uibooster.model.UiBoosterOptions;
 import lombok.Getter;
 
+import javax.swing.plaf.basic.BasicLookAndFeel;
 import java.awt.*;
 import java.io.File;
 
@@ -22,13 +27,15 @@ public class Main {
 
     private final UiBooster ui;
     private final Storage storage;
+    private final Tray tray;
     private final Executor executor;
     private final MainFrame mainFrame;
 
     public Main() {
-        this.ui = new UiBooster();
+        this.ui = new UiBooster(new UiBoosterOptions(new FlatSpacegrayIJTheme(), "/icon.png", UiBoosterOptions.defaultLoadingImage));
         this.storage = new Storage();
         this.executor = new Executor(this);
+        this.tray = new Tray(this);
         this.mainFrame = new MainFrame(this);
     }
 
@@ -37,5 +44,12 @@ public class Main {
                 "Execlauncher encountered problems during execution!",
                 "Check below for the cause of this failure; Execlauncher will likely continue to function. Check the status on the Execlauncher main screen.",
                 throwable);
+    }
+
+    public void exit() {
+        executor.stopAll();
+        executor.getExecutor().shutdown();
+        storage.close();
+        System.exit(0);
     }
 }

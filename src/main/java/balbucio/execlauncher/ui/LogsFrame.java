@@ -1,7 +1,5 @@
 package balbucio.execlauncher.ui;
 
-import balbucio.execlauncher.Executor;
-import balbucio.execlauncher.Main;
 import balbucio.execlauncher.model.Executable;
 
 import javax.swing.*;
@@ -20,6 +18,7 @@ public class LogsFrame extends JFrame implements ComponentListener, ContainerLis
 
     public LogsFrame(Executable executable) {
         super(executable.getName() + " in Execlauncher");
+        this.setIconImage(Toolkit.getDefaultToolkit().getImage(MainFrame.class.getResource("/icon.png")));
         this.setMinimumSize(new Dimension(500, 500));
         this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         this.executable = executable;

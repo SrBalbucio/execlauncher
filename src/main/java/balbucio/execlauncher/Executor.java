@@ -4,7 +4,6 @@ import balbucio.execlauncher.model.Executable;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,17 +37,22 @@ public class Executor {
         this.main.getMainFrame().update();
     }
 
+    public int activeNow() {
+        return processes.size();
+    }
+
     public boolean isActive(Executable executable) {
         return this.processes.containsKey(executable) && this.processes.get(executable).isAlive();
     }
 
     public void start(Executable executable) {
+        if (isActive(executable)) return;
+
         StringBuilder cmd = new StringBuilder(executable.getCmd());
 
         if (!executable.getOptions().isEmpty()) {
             executable.getOptions().forEach((key, value) -> cmd.append(" \"").append(key).append("=").append(value).append("\""));
         }
-
 
         if (!executable.getStartCmds().isEmpty()) {
             ProcessBuilder processBuilder = new ProcessBuilder(executable.startCmds());
@@ -76,8 +80,8 @@ public class Executor {
     private void postStart(Executable executable, String cmd) {
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
-        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+        processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
+        processBuilder.redirectError(ProcessBuilder.Redirect.PIPE);
         processBuilder.directory(executable.getFilePath());
         processBuilder.environment().putAll(executable.getEnv());
         executor.submit(() -> {
@@ -88,6 +92,7 @@ public class Executor {
                 executable.setErrorStream(process.getErrorStream());
                 executable.setInputStream(process.getInputStream());
                 this.processes.put(executable, process);
+                main.getTray().update();
                 main.getMainFrame().update();
                 process.waitFor();
                 stop(executable);
@@ -106,6 +111,7 @@ public class Executor {
         executable.setInputStream(null);
         this.processes.remove(executable);
         main.getMainFrame().update();
+        main.getTray().update();
 
         if (!executable.getStopCmds().isEmpty()) {
             ProcessBuilder processBuilder = new ProcessBuilder(executable.stopCmds());
@@ -132,5 +138,14 @@ public class Executor {
         this.saved.remove(executable);
         main.getStorage().removeExecutable(executable);
         main.getMainFrame().update();
+        main.getTray().update();
+    }
+
+    public void startAll() {
+        this.saved.forEach(this::start);
+    }
+
+    public void stopAll() {
+        this.saved.forEach(this::stop);
     }
 }

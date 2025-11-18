@@ -72,8 +72,13 @@ public class Storage {
     }
 
     public Executable importFromJSON(String json) {
-        Executable executable =  gson.fromJson(json, Executable.class);
+        Executable executable = gson.fromJson(json, Executable.class);
         saveExecutable(executable);
         return executable;
+    }
+
+    public void close() {
+        mvStore.commit();
+        mvStore.close();
     }
 }
