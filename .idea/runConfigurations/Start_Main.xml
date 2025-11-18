@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Start Main" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="balbucio.execlauncher.Main" />
+    <module name="execlauncher" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="balbucio.execlauncher.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
