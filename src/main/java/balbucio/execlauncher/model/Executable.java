@@ -113,8 +113,12 @@ public class Executable {
     }
 
     public void createLogsFrame() {
-        if (this.logsFrame != null) return;
-        this.logsFrame = new LogsFrame(this);
+        if (this.logsFrame == null) {
+            this.logsFrame = new LogsFrame(this);
+        }
+        this.logs = new StringBuilder();
+        logsFrame.stopLogStream();
+        logsFrame.initLogStream();
     }
 
     public void closeLogsFrame() {
