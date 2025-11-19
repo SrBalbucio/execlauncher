@@ -113,10 +113,7 @@ public class Executor {
         executable.setErrorStream(null);
         executable.setInputStream(null);
         this.processes.remove(executable);
-        Thread thread = this.threads.remove(executable);
-        try {
-            if (thread != null && thread.isAlive()) thread.interrupt();
-        } catch (Exception ignored){}
+        this.threads.remove(executable);
         main.getMainFrame().update();
         main.getTray().update();
 
@@ -127,7 +124,7 @@ public class Executor {
             processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
             processBuilder.directory(executable.getFilePath());
             processBuilder.environment().putAll(executable.getEnv());
-            thread = new Thread(() -> {
+            Thread thread = new Thread(() -> {
                 try {
                     Process exitProcess = processBuilder.start();
                     exitProcess.waitFor();
