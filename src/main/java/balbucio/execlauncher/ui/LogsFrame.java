@@ -88,7 +88,7 @@ public class LogsFrame extends JFrame implements ComponentListener, ContainerLis
 
     private Thread thread;
 
-    public void initLogStream() {
+    public synchronized void initLogStream() {
         if (executable.getInputStream() == null) return;
         if (thread != null) thread.interrupt();
 

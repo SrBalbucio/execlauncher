@@ -6,7 +6,7 @@
 
     <groupId>balbucio.execlauncher</groupId>
     <artifactId>execlauncher</artifactId>
-    <version>1.1</version>
+    <version>1.4</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

@@ -59,6 +59,7 @@ public class ExecutableCard extends JPanel {
         panel.add(status);
 
         JButton run = new JButton(active ? "⏹️" : "▶️");
+        run.setToolTipText(active ? "Stop the execution of the executable." : "Start the executable.");
         run.setPreferredSize(new Dimension(60, 28));
         run.addActionListener(e -> {
             if (!active) {
@@ -75,6 +76,7 @@ public class ExecutableCard extends JPanel {
 //        panel.add(edit);
 
         JButton remove = new JButton("🗑️");
+        remove.setToolTipText("Delete the executable. (confirmation required)");
         remove.setPreferredSize(new Dimension(60, 28));
         remove.addActionListener(e -> Main.instance.getUi().showConfirmDialog(
                 "Do you really want this action?",
@@ -85,6 +87,7 @@ public class ExecutableCard extends JPanel {
 
         if (active) {
             JButton showLogs = new JButton("Show Logs");
+            showLogs.setToolTipText("Displays the executable logs.");
             showLogs.addActionListener(e -> executable.showLogsFrame());
             panel.add(showLogs);
         }
