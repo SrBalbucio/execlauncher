@@ -11,6 +11,8 @@ import lombok.Getter;
 import javax.swing.plaf.basic.BasicLookAndFeel;
 import java.awt.*;
 import java.io.File;
+import java.util.Optional;
+import java.util.spi.ToolProvider;
 
 @Getter
 public class Main {
@@ -21,6 +23,7 @@ public class Main {
     public static Desktop desktop = Desktop.getDesktop();
 
     public static void main(String[] args) {
+        ToolProvider.findFirst("jpackage").ifPresent((tool) -> tool.run(System.out, System.err));
         INSTALL_PATH.mkdirs();
         instance = new Main();
     }

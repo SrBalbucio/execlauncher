@@ -37,7 +37,7 @@ if [ "$type" == "exe" ]; then
 jpackage \
   --input jpackage/ \
   --name "Execlauncher" \
-  --description "Manage executables via a simple GUI." \
+  --description "Execlauncher - Manage executables via a simple GUI." \
   --vendor "balbucio.xyz" \
   --main-jar execlauncher.jar \
   --main-class balbucio.execlauncher.Main \
