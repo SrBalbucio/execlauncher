@@ -56,7 +56,7 @@ public class LogsFrame extends JFrame implements ComponentListener, ContainerLis
                         FileWriter fileWriter = new FileWriter(selectedFile);
                         fileWriter.write(textPane.getText());
                         fileWriter.close();
-                        textPane.setText("Saved with successfully in " + selectedFile.getAbsolutePath());
+                        addLog("Saved with successfully in " + selectedFile.getAbsolutePath());
                     } catch (Exception ex) {
                         addLog("---------------------------------------------------");
                         addLog("Execlauncher exception : " + ex.getMessage());
