@@ -1,6 +1,7 @@
 package balbucio.execlauncher.model;
 
 import balbucio.execlauncher.Main;
+import balbucio.execlauncher.action.UpdateCmdOptions;
 import balbucio.execlauncher.ui.LogsFrame;
 import balbucio.execlauncher.utils.MapUtils;
 import com.google.gson.annotations.Expose;
@@ -28,6 +29,8 @@ public class Executable {
     private Map<String, String> env = new HashMap<>();
     @Expose
     private Map<String, String> options = new HashMap<>();
+    @Expose
+    private CmdOptions cmdOptions;
     @Expose
     private List<String> startCmds = new ArrayList<>();
     @Expose
@@ -123,5 +126,9 @@ public class Executable {
 
     public void closeLogsFrame() {
         if (logsFrame != null) logsFrame.setVisible(false);
+    }
+
+    public void showCmdOptions() {
+        new UpdateCmdOptions(this);
     }
 }

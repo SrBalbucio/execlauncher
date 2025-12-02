@@ -82,8 +82,10 @@ public class LogsFrame extends JFrame implements ComponentListener, ContainerLis
     }
 
     public void addLog(String msg) {
-        executable.getLogs().append("\n").append(msg);
-        textPane.setText(executable.getLogs().toString());
+        SwingUtilities.invokeLater(() -> {
+            executable.getLogs().append("\n").append(msg);
+            textPane.setText(executable.getLogs().toString());
+        });
     }
 
     private Thread thread;

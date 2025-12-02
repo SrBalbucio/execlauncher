@@ -1,9 +1,11 @@
 package balbucio.execlauncher;
 
+import balbucio.execlauncher.model.CmdOptions;
 import balbucio.execlauncher.model.Executable;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,10 +48,11 @@ public class Executor {
         return this.processes.containsKey(executable) && this.processes.get(executable).isAlive();
     }
 
-    public void start(Executable executable) {
+    public void init(Executable executable) {
         if (isActive(executable)) return;
 
         StringBuilder cmd = new StringBuilder(executable.getCmd());
+        CmdOptions cmdOptions = executable.getCmdOptions();
 
         if (!executable.getOptions().isEmpty()) {
             executable.getOptions().forEach((key, value) -> cmd.append(" \"").append(key).append("=").append(value).append("\""));
@@ -66,8 +69,13 @@ public class Executor {
                 try {
                     Process exitProcess = processBuilder.start();
                     exitProcess.waitFor();
+
+                    if (cmdOptions != null && cmdOptions.isDelayRun() && cmdOptions.getDelayRunInSecs() > 0) {
+                        Thread.sleep(Duration.ofSeconds(cmdOptions.getDelayRunInSecs()));
+                    }
+
                     main.getMainFrame().update();
-                    postStart(executable, cmd.toString());
+                    postInit(executable, cmd.toString());
                 } catch (Exception e) {
                     e.printStackTrace();
                     main.showError(e);
@@ -76,11 +84,11 @@ public class Executor {
             thread.start();
             threads.put(executable, thread);
         } else {
-            postStart(executable, cmd.toString());
+            postInit(executable, cmd.toString());
         }
     }
 
-    private void postStart(Executable executable, String cmd) {
+    private void postInit(Executable executable, String cmd) {
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
@@ -147,7 +155,7 @@ public class Executor {
     }
 
     public void startAll() {
-        this.saved.forEach(this::start);
+        this.saved.forEach(this::init);
     }
 
     public void stopAll() {

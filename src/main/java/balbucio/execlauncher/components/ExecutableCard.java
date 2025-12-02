@@ -63,7 +63,7 @@ public class ExecutableCard extends JPanel {
         run.setPreferredSize(new Dimension(60, 28));
         run.addActionListener(e -> {
             if (!active) {
-                executor.start(executable);
+                executor.init(executable);
             } else {
                 executor.stop(executable);
             }
@@ -149,6 +149,10 @@ public class ExecutableCard extends JPanel {
             Storage.getInstance().saveExecutable(executable);
         });
         popupMenu.add(stopCmds);
+
+        JMenuItem optCmds = new JMenuItem("Manage cmd options");
+        optCmds.addActionListener(e -> executable.showCmdOptions());
+        popupMenu.add(optCmds);
 
         popupMenu.addSeparator();
 
