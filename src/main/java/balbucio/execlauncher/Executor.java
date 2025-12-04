@@ -81,6 +81,7 @@ public class Executor {
                     main.showError(e);
                 }
             });
+            thread.setDaemon(false);
             thread.start();
             threads.put(executable, thread);
         } else {
@@ -142,6 +143,7 @@ public class Executor {
                     main.showError(e);
                 }
             });
+            thread.setDaemon(false);
             thread.start();
         }
     }
