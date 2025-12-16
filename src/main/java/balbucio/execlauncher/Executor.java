@@ -85,7 +85,10 @@ public class Executor {
             thread.start();
             threads.put(executable, thread);
         } else {
-            postInit(executable, cmd.toString());
+            Thread thread = new Thread(() -> postInit(executable, cmd.toString()));
+            thread.setDaemon(false);
+            thread.start();
+            threads.put(executable, thread);
         }
     }
 
