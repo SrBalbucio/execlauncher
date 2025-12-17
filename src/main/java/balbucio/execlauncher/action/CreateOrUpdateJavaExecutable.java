@@ -28,7 +28,7 @@ public class CreateOrUpdateJavaExecutable {
 
         Form form = main.getUi()
                 .createForm("Create or update an executable")
-                .addText("Executable Name:")
+                .addText("Executable Name:", executable.getName() != null ? executable.getName() : "")
                 .addSelection("Select Java Home:", new ArrayList<>(JavaUtils.getJavaAvailable().values()))
                 .addButton("Select workspace path", this::selectWorkspacePath)
                 .addButton("Select JAR File", this::selectJar)
@@ -62,7 +62,6 @@ public class CreateOrUpdateJavaExecutable {
 
         executable.setCmd(cmd.toString());
 
-        System.out.println(executable);
         Executor.getInstance().addExecutable(executable);
     }
 

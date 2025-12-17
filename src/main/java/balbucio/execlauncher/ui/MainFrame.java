@@ -4,6 +4,7 @@ import balbucio.execlauncher.Executor;
 import balbucio.execlauncher.Main;
 import balbucio.execlauncher.Storage;
 import balbucio.execlauncher.action.CreateOrUpdateJavaExecutable;
+import balbucio.execlauncher.action.CreateOrUpdatePNPMExecutable;
 import balbucio.execlauncher.components.ExecutableCard;
 import balbucio.execlauncher.model.Executable;
 
@@ -36,12 +37,13 @@ public class MainFrame extends JFrame {
         {
             JButton button = new JButton("Add. Executable");
             button.addActionListener(e -> {
-                String type = main.getUi().showSelectionDialog("Select the executable type:", "Add. Executable", "Java");
+                String type = main.getUi().showSelectionDialog("Select the executable type:", "Add. Executable", "Java", "PNPM");
 
                 if (type == null) return;
 
                 switch (type) {
                     case "Java" -> new CreateOrUpdateJavaExecutable();
+                    case "PNPM" -> new CreateOrUpdatePNPMExecutable();
                 }
             });
             panel.add(button);

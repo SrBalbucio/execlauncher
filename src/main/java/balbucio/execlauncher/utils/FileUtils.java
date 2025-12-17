@@ -27,7 +27,7 @@ public class FileUtils {
             Scanner scanner = new Scanner(file);
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
-                System.out.println(line);
+                if (line.startsWith("#")) continue;
                 String[] var = line.split("=");
                 map.put(var[0], var[1]);
             }
