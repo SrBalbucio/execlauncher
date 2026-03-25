@@ -178,6 +178,14 @@ public class ExecutableCard extends JPanel {
             popupMenu.add(changeJava);
         }
 
+        JMenuItem openExplorer = new JMenuItem("Open in Explorer (only Windows)");
+        openExplorer.addActionListener(e -> {
+            try {
+                Runtime.getRuntime().exec("explorer.exe " + executable.getPath());
+            } catch (Exception ignored) {}
+        });
+        popupMenu.add(openExplorer);
+
         JMenuItem export = new JMenuItem("Export...");
         export.addActionListener(e -> {
             String json = Storage.getInstance().toJSON(executable);
