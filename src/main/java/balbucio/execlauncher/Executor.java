@@ -119,13 +119,25 @@ public class Executor {
 
     public void stop(Executable executable) {
         Process process = this.processes.get(executable);
-        if (process != null && process.isAlive()) process.destroy();
+
+        if (process != null && process.isAlive()) {
+            ProcessHandle handle = process.toHandle();
+            handle.descendants().forEach(ProcessHandle::destroyForcibly);
+            try {
+                new ProcessBuilder("taskkill", "/PID", String.valueOf(process.pid()), "/T", "/F").start();
+            } catch(Exception ignored){}
+            process.destroy();
+        }
+
         if (executable.getLogsFrame() != null) executable.getLogsFrame().stopLogStream();
+
         executable.setOutputWriter(null);
         executable.setErrorStream(null);
         executable.setInputStream(null);
+
         this.processes.remove(executable);
         this.threads.remove(executable);
+
         main.getMainFrame().update();
         main.getTray().update();
 
