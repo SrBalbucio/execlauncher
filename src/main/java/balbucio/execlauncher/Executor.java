@@ -2,6 +2,7 @@ package balbucio.execlauncher;
 
 import balbucio.execlauncher.model.CmdOptions;
 import balbucio.execlauncher.model.Executable;
+import balbucio.execlauncher.utils.system.SystemServiceFactory;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -123,9 +124,7 @@ public class Executor {
         if (process != null && process.isAlive()) {
             ProcessHandle handle = process.toHandle();
             handle.descendants().forEach(ProcessHandle::destroyForcibly);
-            try {
-                new ProcessBuilder("taskkill", "/PID", String.valueOf(process.pid()), "/T", "/F").start();
-            } catch(Exception ignored){}
+            SystemServiceFactory.create().closeAllProcesses(handle.pid());
             process.destroy();
         }
 

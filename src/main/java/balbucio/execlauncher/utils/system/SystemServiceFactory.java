@@ -1,14 +1,14 @@
-package balbucio.execlauncher.utils;
+package balbucio.execlauncher.utils.system;
 
 public class SystemServiceFactory {
+
+    private static WindowsSystemService windows;
 
     public static SystemService create() {
         String os = System.getProperty("os.name").toLowerCase();
 
         if (os.contains("win")) {
-            return new WindowsSystemService();
-        } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
-            return new LinuxSystemService();
+            return (windows == null ? windows = new WindowsSystemService() : windows);
         }
 
         throw new UnsupportedOperationException("Sistema operacional não suportado: " + os);
