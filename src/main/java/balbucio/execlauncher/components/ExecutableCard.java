@@ -21,7 +21,7 @@ public class ExecutableCard extends JPanel {
     private final Executable executable;
     private final boolean active;
 
-    public ExecutableCard(Executable executable, boolean active) {
+    public ExecutableCard(Executable executable, boolean active, boolean selected) {
         super(new BorderLayout());
         this.setBorder(new EmptyBorder(5, 5, 5, 5));
         this.executable = executable;
@@ -32,6 +32,9 @@ public class ExecutableCard extends JPanel {
         this.add(rightPanel, BorderLayout.EAST);
         this.setMaximumSize(new Dimension(MAX_WINDOW.width, 60));
         this.setComponentPopupMenu(getPopupMenu());
+
+        Color bg = selected ? UIManager.getColor("List.selectionBackground") : this.getBackground();
+        this.setBackground(bg);
     }
 
     public JPanel getLeftPanel() {
@@ -164,6 +167,14 @@ public class ExecutableCard extends JPanel {
         });
         popupMenu.add(changeName);
 
+        JMenuItem changePath = new JMenuItem("Change path");
+        changePath.addActionListener(e -> {
+            String path = Main.instance.getUi().showTextInputDialog("What is the new path to the executable?");
+            executable.setPath(path);
+            Storage.getInstance().saveExecutable(executable);
+        });
+        popupMenu.add(changePath);
+
         if (executable.getType() != null && executable.getType().equalsIgnoreCase("Java")) {
             JMenuItem changeJava = new JMenuItem("Change Java");
             changeJava.addActionListener(e -> {
@@ -182,7 +193,8 @@ public class ExecutableCard extends JPanel {
         openExplorer.addActionListener(e -> {
             try {
                 Runtime.getRuntime().exec("explorer.exe " + executable.getPath());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         });
         popupMenu.add(openExplorer);
 

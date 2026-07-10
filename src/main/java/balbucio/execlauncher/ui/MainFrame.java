@@ -65,7 +65,8 @@ public class MainFrame extends JFrame {
             JButton button = new JButton("Import...");
             button.addActionListener(e -> {
                 String json = main.getUi().showTextInputDialog("Enter the configuration JSON.");
-                Storage.getInstance().importFromJSON(json);
+                Executable executable = Storage.getInstance().importFromJSON(json);
+                update();
             });
             panel.add(button);
         }
@@ -104,7 +105,7 @@ public class MainFrame extends JFrame {
         listPanel.removeAll();
 
         for (Executable executable : Executor.getInstance().getSaved()) {
-            listPanel.add(new ExecutableCard(executable, Executor.getInstance().isActive(executable)));
+            listPanel.add(new ExecutableCard(executable, Executor.getInstance().isActive(executable), false));
         }
 
         listPanel.setVisible(true);
