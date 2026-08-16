@@ -95,11 +95,17 @@ public class ExecutableCard extends JPanel {
 
         panel.add(top);
 
-        JLabel path = new JLabel(executable.getPath());
-        path.setFont(path.getFont().deriveFont(12f));
-        path.setForeground(Color.GRAY);
-        path.setBorder(new EmptyBorder(2, 24, 0, 0));
-        panel.add(path);
+        {
+            JPanel opt = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+            opt.setBackground(new Color(0, 0, 0, 0));
+            opt.setOpaque(false);
+            JLabel path = new JLabel(executable.getPath());
+            path.setFont(path.getFont().deriveFont(12f));
+            path.setForeground(Color.GRAY);
+            path.setBorder(new EmptyBorder(2, 20, 0, 0));
+            opt.add(path);
+            panel.add(opt);
+        }
 
         return panel;
     }

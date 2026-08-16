@@ -1,0 +1,14 @@
+when:
+  - event: push
+  - event: pull_request
+
+steps:
+  - name: test
+    image: maven:3.9-eclipse-temurin-21
+    commands:
+      - mvn -B test
+
+  - name: package
+    image: maven:3.9-eclipse-temurin-21
+    commands:
+      - mvn -B -q package
