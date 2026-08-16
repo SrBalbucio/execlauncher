@@ -38,6 +38,7 @@ public class Executor {
     }
 
     public void addExecutable(Executable executable) {
+        this.saved.removeIf(e -> e.getId().equals(executable.getId()));
         this.saved.add(executable);
         this.main.getStorage().saveExecutable(executable);
         this.updateUI();

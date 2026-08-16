@@ -1,12 +1,13 @@
 package balbucio.execlauncher;
 
+import balbucio.execlauncher.settings.AppTheme;
 import balbucio.execlauncher.ui.MainFrame;
-import com.formdev.flatlaf.intellijthemes.FlatSpacegrayIJTheme;
 import de.milchreis.uibooster.UiBooster;
 import de.milchreis.uibooster.model.UiBoosterOptions;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.swing.plaf.basic.BasicLookAndFeel;
 import java.io.File;
 
 @Getter
@@ -29,11 +30,29 @@ public class Main {
     private final MainFrame mainFrame;
 
     public Main() {
-        this.ui = new UiBooster(new UiBoosterOptions(new FlatSpacegrayIJTheme(), "/icon.png", UiBoosterOptions.defaultLoadingImage));
         this.storage = new Storage();
         this.executor = new Executor(this);
+
+        AppTheme theme = resolveTheme();
+        this.ui = new UiBooster(new UiBoosterOptions((BasicLookAndFeel) theme.create(), "/icon.png", UiBoosterOptions.defaultLoadingImage));
+
         this.tray = new Tray(this);
         this.mainFrame = new MainFrame(this);
+    }
+
+    private AppTheme resolveTheme() {
+        AppTheme theme = AppTheme.fromName(storage.getSetting(Storage.SETTING_THEME, AppTheme.SPACEGRAY.name()));
+        try {
+            theme.install();
+        } catch (Exception e) {
+            log.error("Failed to install theme {}, falling back to Spacegray", theme, e);
+            theme = AppTheme.SPACEGRAY;
+            try {
+                theme.install();
+            } catch (Exception ignored) {
+            }
+        }
+        return theme;
     }
 
     private static File resolveInstallPath() {

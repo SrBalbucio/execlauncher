@@ -25,10 +25,19 @@ public class CreateOrUpdatePNPMExecutable {
         this.executable = executable;
         this.main = Main.instance;
 
+        String pnpmPath = FileUtils.findOnPath("pnpm").getAbsolutePath();
+        if (pnpmPath == null) {
+            pnpmPath = System.getenv("LOCALAPPDATA") + "\\pnpm\\pnpm.cmd";
+        }
+        if (pnpmPath == null || pnpmPath.isBlank()) {
+            pnpmPath = System.getProperty("java.home"); // fails intentionally below
+        }
+
         Form form = main.getUi()
-                .createForm("Create or update an executable")
+                .createForm("Create or update a PNPM executable")
                 .addText("Executable Name:", executable.getName() != null ? executable.getName() : "")
-                .addText("Script Name:", "dev")
+                .addText("Script name:", currentScript() != null ? currentScript() : "")
+                .addSelection("Select PNPM Path:", List.of(pnpmPath))
                 .addButton("Select workspace path", this::selectWorkspacePath)
                 .addButton("Manage environment variables", executable::showVars)
                 .addButton("Manage command line options", executable::showOptions)
@@ -36,6 +45,7 @@ public class CreateOrUpdatePNPMExecutable {
 
         executable.setName(form.getByIndex(0).asString());
         String scriptName = form.getByIndex(1).asString();
+        pnpmPath = form.getByIndex(2).asString();
 
         if (executable.getName() == null || executable.getName().isBlank()) {
             main.getUi().showErrorDialog("There is missing data; please check that you entered the name correctly.", "Execlauncher cannot create a new executable.");
@@ -43,7 +53,7 @@ public class CreateOrUpdatePNPMExecutable {
         }
 
         if (scriptName == null || scriptName.isBlank()) {
-            main.getUi().showErrorDialog("Please enter the script name.", "Execlauncher cannot create a new executable.");
+            main.getUi().showErrorDialog("Please inform the script name.", "Execlauncher cannot create a new executable.");
             return;
         }
 
@@ -52,35 +62,33 @@ public class CreateOrUpdatePNPMExecutable {
             return;
         }
 
-        File pnpmFile = FileUtils.findOnPath("pnpm");
-        if (pnpmFile == null) {
-            pnpmFile = findLocalAppDataPnpm();
-        }
-
-        if (pnpmFile == null) {
-            JOptionPane.showMessageDialog(null, "PNPM executable not found, install with 'npm install -g pnpm'.", "It was not possible to create the executable.", JOptionPane.ERROR_MESSAGE);
+        File pnpmFile = new File(pnpmPath);
+        if (!pnpmFile.exists()) {
+            main.getUi().showErrorDialog("PNPM was not found at " + pnpmPath + ". Please verify your installation.", "Execlauncher cannot create a new executable.");
             return;
         }
 
         List<String> tokens = new ArrayList<>();
-        if (pnpmFile.getName().endsWith(".cmd") || pnpmFile.getName().endsWith(".bat")) {
-            tokens.add("cmd.exe");
-            tokens.add("/c");
+        String program = pnpmPath.toLowerCase().endsWith(".cmd") || pnpmPath.toLowerCase().endsWith(".bat")
+                ? "cmd.exe /c " + pnpmPath
+                : pnpmPath;
+        for (String token : CommandLineUtils.parse(program)) {
+            tokens.add(token);
         }
-        tokens.add(pnpmFile.getAbsolutePath());
         tokens.add("run");
         tokens.add(scriptName);
-
         executable.setCmd(CommandLineUtils.joinQuoted(tokens));
+
         Executor.getInstance().addExecutable(executable);
     }
 
-    private File findLocalAppDataPnpm() {
-        String localAppData = System.getenv("LOCALAPPDATA");
-        if (localAppData == null || localAppData.isBlank()) return null;
-
-        File pnpm = new File(localAppData, "pnpm/pnpm.exe");
-        return pnpm.isFile() ? pnpm : null;
+    private String currentScript() {
+        List<String> tokens = CommandLineUtils.parse(executable.getCmd());
+        int idx = tokens.indexOf("run");
+        if (idx >= 0 && idx + 1 < tokens.size()) {
+            return tokens.get(idx + 1);
+        }
+        return null;
     }
 
     public void selectWorkspacePath() {

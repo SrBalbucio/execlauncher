@@ -18,6 +18,7 @@ public class CreateOrUpdateJavaExecutable {
 
     private final Main main;
     private final Executable executable;
+    private File jarPath;
 
     public CreateOrUpdateJavaExecutable() {
         this(new Executable());
@@ -49,9 +50,8 @@ public class CreateOrUpdateJavaExecutable {
             javaHome = System.getProperty("java.home");
         }
 
-        if (executable.getName() == null || executable.getName().isBlank()
-                || executable.getCmd() == null || executable.getCmd().isBlank()) {
-            main.getUi().showErrorDialog("There is missing data; please check that you entered the name and script correctly.", "Execlauncher cannot create a new executable.");
+        if (executable.getName() == null || executable.getName().isBlank()) {
+            main.getUi().showErrorDialog("There is missing data; please check that you entered the name correctly.", "Execlauncher cannot create a new executable.");
             return;
         }
 
@@ -67,23 +67,37 @@ public class CreateOrUpdateJavaExecutable {
             return;
         }
 
+        String jarArgument = jarArgument();
+        if (jarArgument == null || jarArgument.isBlank()) {
+            main.getUi().showErrorDialog("Please select the JAR file.", "Execlauncher cannot create a new executable.");
+            return;
+        }
+
         List<String> tokens = new ArrayList<>();
         tokens.add(javaHomeFile.getAbsolutePath());
         tokens.add("-jar");
-        tokens.add(jarArgument());
+        tokens.add(jarArgument);
         executable.setCmd(CommandLineUtils.joinQuoted(tokens));
 
         Executor.getInstance().addExecutable(executable);
     }
 
     private String jarArgument() {
-        Path jarPath = Path.of(executable.getCmd()).toAbsolutePath().normalize();
-        Path workspacePath = executable.getFilePath().toPath().toAbsolutePath().normalize();
-
-        if (jarPath.startsWith(workspacePath)) {
-            return workspacePath.relativize(jarPath).toString();
+        if (jarPath != null) {
+            Path jarAbsolute = jarPath.toPath().toAbsolutePath().normalize();
+            Path workspaceAbsolute = executable.getFilePath().toPath().toAbsolutePath().normalize();
+            if (jarAbsolute.startsWith(workspaceAbsolute)) {
+                return workspaceAbsolute.relativize(jarAbsolute).toString();
+            }
+            return jarAbsolute.getFileName().toString();
         }
-        return jarPath.getFileName().toString();
+
+        List<String> tokens = CommandLineUtils.parse(executable.getCmd());
+        int idx = tokens.indexOf("-jar");
+        if (idx >= 0 && idx + 1 < tokens.size()) {
+            return tokens.get(idx + 1);
+        }
+        return null;
     }
 
     public void selectWorkspacePath() {
@@ -113,6 +127,7 @@ public class CreateOrUpdateJavaExecutable {
         chooser.showOpenDialog(main.getMainFrame());
 
         if (chooser.getSelectedFile() != null) {
+            this.jarPath = chooser.getSelectedFile();
             try {
                 executable.setCmd(chooser.getSelectedFile().getCanonicalPath());
             } catch (Exception e) {
