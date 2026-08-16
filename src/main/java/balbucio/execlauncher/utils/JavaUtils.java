@@ -3,7 +3,6 @@ package balbucio.execlauncher.utils;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class JavaUtils {
 
@@ -12,12 +11,23 @@ public class JavaUtils {
     public static Map<String, String> getJavaAvailable() {
         Map<String, String> result = new HashMap<>();
 
-        for (File file : Objects.requireNonNull(JDK_PATH.listFiles())) {
+        File[] files = JDK_PATH.listFiles();
+        if (files == null) return result;
+
+        for (File file : files) {
             if (file.isDirectory()) {
                 result.put(file.getName(), file.getAbsolutePath());
             }
         }
 
         return result;
+    }
+
+    public static boolean isWindows() {
+        return System.getProperty("os.name", "").toLowerCase().contains("win");
+    }
+
+    public static String javaExecutableName() {
+        return isWindows() ? "java.exe" : "java";
     }
 }

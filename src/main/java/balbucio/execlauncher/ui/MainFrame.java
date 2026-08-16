@@ -14,7 +14,6 @@ import java.awt.*;
 public class MainFrame extends JFrame {
 
     private Main main;
-    private Executable selected;
 
     public MainFrame(Main main) {
         super("Execlauncher");
@@ -65,8 +64,13 @@ public class MainFrame extends JFrame {
             JButton button = new JButton("Import...");
             button.addActionListener(e -> {
                 String json = main.getUi().showTextInputDialog("Enter the configuration JSON.");
-                Executable executable = Storage.getInstance().importFromJSON(json);
-                update();
+                if (json == null || json.isBlank()) return;
+                try {
+                    Storage.getInstance().importFromJSON(json);
+                    update();
+                } catch (IllegalArgumentException ex) {
+                    main.getUi().showErrorDialog(ex.getMessage(), "Import failed");
+                }
             });
             panel.add(button);
         }
@@ -101,14 +105,12 @@ public class MainFrame extends JFrame {
     }
 
     public void update() {
-        listPanel.setVisible(false);
         listPanel.removeAll();
 
         for (Executable executable : Executor.getInstance().getSaved()) {
             listPanel.add(new ExecutableCard(executable, Executor.getInstance().isActive(executable), false));
         }
 
-        listPanel.setVisible(true);
         listPanel.revalidate();
         listPanel.repaint();
     }

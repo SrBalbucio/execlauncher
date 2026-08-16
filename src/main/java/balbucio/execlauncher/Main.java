@@ -1,29 +1,23 @@
 package balbucio.execlauncher;
 
 import balbucio.execlauncher.ui.MainFrame;
-import com.formdev.flatlaf.intellijthemes.FlatCyanLightIJTheme;
-import com.formdev.flatlaf.intellijthemes.FlatGradiantoMidnightBlueIJTheme;
 import com.formdev.flatlaf.intellijthemes.FlatSpacegrayIJTheme;
 import de.milchreis.uibooster.UiBooster;
 import de.milchreis.uibooster.model.UiBoosterOptions;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.plaf.basic.BasicLookAndFeel;
-import java.awt.*;
 import java.io.File;
-import java.util.Optional;
-import java.util.spi.ToolProvider;
 
 @Getter
+@Slf4j
 public class Main {
 
-    public static File INSTALL_PATH = new File(System.getenv("APPDATA"), "Execlauncher");
+    public static File INSTALL_PATH = resolveInstallPath();
     public static File DB_PATH = new File(INSTALL_PATH, "storage.db");
     public static Main instance;
-    public static Desktop desktop = Desktop.getDesktop();
 
     public static void main(String[] args) {
-        ToolProvider.findFirst("jpackage").ifPresent((tool) -> tool.run(System.out, System.err));
         INSTALL_PATH.mkdirs();
         instance = new Main();
     }
@@ -42,7 +36,16 @@ public class Main {
         this.mainFrame = new MainFrame(this);
     }
 
+    private static File resolveInstallPath() {
+        String appData = System.getenv("APPDATA");
+        if (appData != null && !appData.isBlank()) {
+            return new File(appData, "Execlauncher");
+        }
+        return new File(System.getProperty("user.home"), ".execlauncher");
+    }
+
     public void showError(Exception throwable) {
+        log.error("Execlauncher encountered an error", throwable);
         ui.showException(
                 "Check below for the cause of this failure; Execlauncher will likely continue to function. Check the status on the Execlauncher main screen.",
                 "Execlauncher encountered problems during execution!",
@@ -51,7 +54,6 @@ public class Main {
 
     public void exit() {
         executor.stopAll();
-        executor.getExecutor().shutdown();
         storage.close();
         System.exit(0);
     }

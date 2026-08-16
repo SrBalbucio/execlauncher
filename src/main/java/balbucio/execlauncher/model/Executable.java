@@ -11,6 +11,7 @@ import lombok.ToString;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -58,14 +59,17 @@ public class Executable {
     }
 
     public void showVars() {
-        System.out.println(env);
         String[][] envs = Main.instance.getUi().showTable(MapUtils.mapToArray2d(this.getEnv()), new String[]{"Key", "Value"}, "Environment Variables");
-        this.setEnv(MapUtils.array2dToMap(envs));
+        if (envs != null) {
+            this.setEnv(MapUtils.array2dToMap(envs));
+        }
     }
 
     public void showOptions() {
         String[][] ops = Main.instance.getUi().showTable(MapUtils.mapToArray2d(this.getOptions()), new String[]{"Key", "Value"}, "Command Line Options");
-        this.setOptions(MapUtils.array2dToMap(ops));
+        if (ops != null) {
+            this.setOptions(MapUtils.array2dToMap(ops));
+        }
     }
 
     public void showStartCmds() {
@@ -73,23 +77,23 @@ public class Executable {
         table[0] = this.startCmds.toArray(new String[0]);
 
         String[][] cmds = Main.instance.getUi().showTable(table, new String[]{"Command"}, "Startup commands for the " + this.name);
-        try {
-            this.startCmds = !cmds[0][0].equals("null") ? List.of(cmds[0]) : Collections.emptyList();
-        } catch (Exception e) {
-            this.startCmds = Collections.emptyList();
-        }
+        if (cmds == null || cmds.length == 0 || cmds[0] == null) return;
+
+        this.startCmds = Arrays.stream(cmds[0])
+                .filter(v -> v != null && !v.isBlank() && !"null".equalsIgnoreCase(v))
+                .collect(Collectors.toList());
     }
 
     public void showStopCmds() {
         String[][] table = new String[1][this.stopCmds.size()];
-        table[0] = this.stopCmds.toArray(String[]::new);
+        table[0] = this.stopCmds.toArray(new String[0]);
 
         String[][] cmds = Main.instance.getUi().showTable(table, new String[]{"Command"}, "Post-Stop commands for the " + this.name);
-        try {
-            this.stopCmds = !cmds[0][0].equals("null") ? List.of(cmds[0]) : Collections.emptyList();
-        } catch (Exception e) {
-            this.stopCmds = Collections.emptyList();
-        }
+        if (cmds == null || cmds.length == 0 || cmds[0] == null) return;
+
+        this.stopCmds = Arrays.stream(cmds[0])
+                .filter(v -> v != null && !v.isBlank() && !"null".equalsIgnoreCase(v))
+                .collect(Collectors.toList());
     }
 
     public String[] startCmds() {
@@ -103,16 +107,16 @@ public class Executable {
     }
 
     public void showLogsFrame() {
-        LogsFrame logsFrame = this.getLogsFrame();
+        LogsFrame frame = this.logsFrame;
 
-        if (logsFrame != null) {
-            logsFrame.setVisible(true);
-            logsFrame.requestFocus();
-        } else {
+        if (frame == null) {
             createLogsFrame();
-            this.logsFrame.setVisible(true);
-            this.logsFrame.initLogStream();
+            frame = this.logsFrame;
         }
+
+        frame.setVisible(true);
+        frame.requestFocus();
+        frame.initLogStream();
     }
 
     public void createLogsFrame() {
@@ -120,8 +124,8 @@ public class Executable {
             this.logsFrame = new LogsFrame(this);
         }
         this.logs = new StringBuilder();
-        logsFrame.stopLogStream();
-        logsFrame.initLogStream();
+        this.logsFrame.clearLogs();
+        this.logsFrame.initLogStream();
     }
 
     public void closeLogsFrame() {

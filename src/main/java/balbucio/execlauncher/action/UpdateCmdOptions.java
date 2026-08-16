@@ -15,9 +15,7 @@ public class UpdateCmdOptions {
         this.main = Main.instance;
 
         CmdOptions cmdOptions = executable.getCmdOptions();
-
-        // se o executável for de versão anterior
-        if(cmdOptions == null) cmdOptions = new CmdOptions();
+        if (cmdOptions == null) cmdOptions = new CmdOptions();
 
         Form form = main.getUi()
                 .createForm("Update cmd options")
@@ -26,21 +24,30 @@ public class UpdateCmdOptions {
                 .show();
 
         boolean delayRun = (boolean) form.getByIndex(0).getValue();
-        int delaySecs = Integer.parseInt(form.getByIndex(1).asString());
+        String delayText = form.getByIndex(1).asString();
 
+        int delaySecs;
         try {
-            if (delaySecs > 600)
-                throw new RuntimeException("The startup delay is very long and can cause system slowdown.");
-
-            cmdOptions.setDelayRun(delayRun);
-            cmdOptions.setDelayRunInSecs(delaySecs);
-            executable.setCmdOptions(cmdOptions);
-            main.getStorage().saveExecutable(executable);
-            main.getMainFrame().update();
-        } catch (Exception e) {
-            main.showError(e);
+            delaySecs = Integer.parseInt(delayText.trim());
+        } catch (NumberFormatException ex) {
+            main.getUi().showErrorDialog("Invalid delay value: " + delayText, "Invalid input");
+            return;
         }
+
+        if (delaySecs < 0) {
+            main.getUi().showErrorDialog("The delay cannot be negative.", "Invalid input");
+            return;
+        }
+
+        if (delaySecs > 600) {
+            main.getUi().showErrorDialog("The startup delay is very long and can cause system slowdown.", "Invalid input");
+            return;
+        }
+
+        cmdOptions.setDelayRun(delayRun);
+        cmdOptions.setDelayRunInSecs(delaySecs);
+        executable.setCmdOptions(cmdOptions);
+        main.getStorage().saveExecutable(executable);
+        main.getMainFrame().update();
     }
-
-
 }

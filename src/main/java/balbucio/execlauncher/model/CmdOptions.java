@@ -1,5 +1,6 @@
 package balbucio.execlauncher.model;
 
+import com.google.gson.annotations.Expose;
 import lombok.*;
 
 @Getter
@@ -10,6 +11,8 @@ import lombok.*;
 @NoArgsConstructor
 public class CmdOptions {
 
+    @Expose
     private boolean delayRun = false;
+    @Expose
     private int delayRunInSecs = 5;
 }

@@ -4,6 +4,7 @@ import balbucio.execlauncher.Executor;
 import balbucio.execlauncher.Main;
 import balbucio.execlauncher.Storage;
 import balbucio.execlauncher.model.Executable;
+import balbucio.execlauncher.utils.CommandLineUtils;
 import balbucio.execlauncher.utils.FileUtils;
 import balbucio.execlauncher.utils.JavaUtils;
 
@@ -11,6 +12,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ExecutableCard extends JPanel {
@@ -72,11 +74,6 @@ public class ExecutableCard extends JPanel {
             }
         });
         panel.add(run);
-
-//        JButton edit = new JButton("✏️");
-//        edit.setPreferredSize(new Dimension(50, 25));
-//        edit.addActionListener(e -> new CreateOrUpdateExecutable(executable));
-//        panel.add(edit);
 
         JButton remove = new JButton("🗑️");
         remove.setToolTipText("Delete the executable. (confirmation required)");
@@ -178,12 +175,11 @@ public class ExecutableCard extends JPanel {
         if (executable.getType() != null && executable.getType().equalsIgnoreCase("Java")) {
             JMenuItem changeJava = new JMenuItem("Change Java");
             changeJava.addActionListener(e -> {
-                String javaPath = Main.instance.getUi().showSelectionDialog("Select a new version of Java.", "Change Java", (List<String>) JavaUtils.getJavaAvailable().values());
+                List<String> javas = new ArrayList<>(JavaUtils.getJavaAvailable().values());
+                String javaPath = Main.instance.getUi().showSelectionDialog("Select a new version of Java.", "Change Java", javas);
+                if (javaPath == null || javaPath.isBlank()) return;
 
-                String[] cmdParts = executable.getCmd().split(" ");
-                cmdParts[0] = "\"" + javaPath + "\"";
-                executable.setCmd(String.join(" ", cmdParts));
-
+                executable.setCmd(CommandLineUtils.replaceProgram(executable.getCmd(), javaPath));
                 Storage.getInstance().saveExecutable(executable);
             });
             popupMenu.add(changeJava);
@@ -192,7 +188,7 @@ public class ExecutableCard extends JPanel {
         JMenuItem openExplorer = new JMenuItem("Open in Explorer (only Windows)");
         openExplorer.addActionListener(e -> {
             try {
-                Runtime.getRuntime().exec("explorer.exe " + executable.getPath());
+                new ProcessBuilder("explorer.exe", executable.getPath()).start();
             } catch (Exception ignored) {
             }
         });

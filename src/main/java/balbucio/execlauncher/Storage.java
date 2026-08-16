@@ -3,15 +3,19 @@ package balbucio.execlauncher;
 import balbucio.execlauncher.model.Executable;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.h2.mvstore.MVMap;
 import org.h2.mvstore.MVStore;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class Storage {
 
     @Getter
@@ -20,7 +24,6 @@ public class Storage {
 
     private final MVStore mvStore;
     private final Gson gson;
-    private final MVMap<String, String> settings;
     private final MVMap<UUID, String> executables;
 
     public Storage() {
@@ -39,12 +42,23 @@ public class Storage {
                 .create();
 
         this.mvStore = builder.open();
-        this.settings = mvStore.openMap("settings");
         this.executables = mvStore.openMap("executables");
     }
 
     public Vector<Executable> executables() {
-        return executables.values().stream().map((str) -> gson.fromJson(str, Executable.class)).collect(Collectors.toCollection(Vector::new));
+        return executables.values().stream()
+                .map(this::deserialize)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(Vector::new));
+    }
+
+    private Executable deserialize(String json) {
+        try {
+            return gson.fromJson(json, Executable.class);
+        } catch (JsonSyntaxException e) {
+            log.error("Failed to deserialize an executable entry, skipping it", e);
+            return null;
+        }
     }
 
     public void saveExecutable(Executable executable) {
@@ -59,20 +73,30 @@ public class Storage {
         mvStore.commit();
     }
 
-    public String getSetting(String key, String defaultValue) {
-        return settings.getOrDefault(key, defaultValue);
-    }
-
-    public void setSetting(String key, String value) {
-        settings.put(key, value);
-    }
-
     public String toJSON(Executable executable) {
         return gson.toJson(executable);
     }
 
     public Executable importFromJSON(String json) {
-        Executable executable = gson.fromJson(json, Executable.class);
+        if (json == null || json.isBlank()) {
+            throw new IllegalArgumentException("The provided JSON is null or empty.");
+        }
+
+        Executable executable;
+        try {
+            executable = gson.fromJson(json, Executable.class);
+        } catch (JsonSyntaxException e) {
+            throw new IllegalArgumentException("The provided JSON is invalid.", e);
+        }
+
+        if (executable == null) {
+            throw new IllegalArgumentException("The provided JSON is invalid.");
+        }
+
+        if (executable.getId() == null) {
+            executable.setId(UUID.randomUUID());
+        }
+
         saveExecutable(executable);
         return executable;
     }

@@ -6,21 +6,20 @@ import java.awt.*;
 public class Tray {
 
     private final Main main;
+    private TrayIcon icon;
 
     public Tray(Main main) {
         this.main = main;
 
         SystemTray systemTray = SystemTray.getSystemTray();
         try {
-            systemTray.add(getIcon());
+            systemTray.add(createIcon());
         } catch (Exception e) {
             main.showError(e);
         }
     }
 
-    private TrayIcon icon;
-
-    public TrayIcon getIcon() {
+    private TrayIcon createIcon() {
         icon = new TrayIcon(Toolkit.getDefaultToolkit().getImage(Tray.class.getResource("/icon_16.png")));
         icon.setPopupMenu(getPopupMenu());
         icon.setToolTip("Executables currently running: " + main.getExecutor().activeNow());
@@ -29,7 +28,11 @@ public class Tray {
     }
 
     public void update() {
-        icon.setToolTip("Executables currently running: " + main.getExecutor().activeNow());
+        SwingUtilities.invokeLater(() -> {
+            if (icon != null) {
+                icon.setToolTip("Executables currently running: " + main.getExecutor().activeNow());
+            }
+        });
     }
 
     public PopupMenu getPopupMenu() {
