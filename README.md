@@ -60,4 +60,4 @@ src/main/java/balbucio/execlauncher/
 
 ## Licença
 
-MIT — veja o arquivo [LICENSE](LICENSE).
+AGPL v3.0 — veja o arquivo [LICENSE](LICENSE).
