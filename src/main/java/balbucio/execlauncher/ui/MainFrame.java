@@ -3,8 +3,11 @@ package balbucio.execlauncher.ui;
 import balbucio.execlauncher.Executor;
 import balbucio.execlauncher.Main;
 import balbucio.execlauncher.Storage;
+import balbucio.execlauncher.action.CreateOrUpdateBashExecutable;
+import balbucio.execlauncher.action.CreateOrUpdateCmdExecutable;
 import balbucio.execlauncher.action.CreateOrUpdateJavaExecutable;
 import balbucio.execlauncher.action.CreateOrUpdatePNPMExecutable;
+import balbucio.execlauncher.action.CreateOrUpdateShellExecutable;
 import balbucio.execlauncher.action.SettingsDialog;
 import balbucio.execlauncher.components.ExecutableCard;
 import balbucio.execlauncher.model.Executable;
@@ -131,12 +134,15 @@ public class MainFrame extends JFrame {
     }
 
     private void promptAddExecutable() {
-        String type = main.getUi().showSelectionDialog("Select the executable type:", "Add. Executable", "Java", "PNPM");
+        String type = main.getUi().showSelectionDialog("Select the executable type:", "Add. Executable", "Java", "PNPM", "Bash", "CMD", "Shell (Bash/CMD)");
         if (type == null) return;
 
         switch (type) {
             case "Java" -> new CreateOrUpdateJavaExecutable();
             case "PNPM" -> new CreateOrUpdatePNPMExecutable();
+            case "Bash" -> new CreateOrUpdateBashExecutable();
+            case "CMD" -> new CreateOrUpdateCmdExecutable();
+            case "Shell (Bash/CMD)" -> new CreateOrUpdateShellExecutable();
         }
     }
 
@@ -160,6 +166,8 @@ public class MainFrame extends JFrame {
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
 
         JScrollPane panel = new JScrollPane(listPanel);
+        panel.getVerticalScrollBar().setUnitIncrement(24);
+        panel.getVerticalScrollBar().setBlockIncrement(96);
         JPopupMenu popupMenu = new JPopupMenu();
 
         {

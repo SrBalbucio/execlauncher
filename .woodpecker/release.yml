@@ -8,14 +8,16 @@ steps:
     commands:
       - mvn -B clean package -Dmaven.test.skip
 
-  - name: release
-    image: alpine:latest
-    commands:
-      - apk add --no-cache gh
-      - gh release create "${CI_COMMIT_TAG}" target/execlauncher.jar
-        --repo "${CI_REPO_OWNER}/${CI_REPO_NAME}"
-        --title "${CI_COMMIT_TAG}"
-        --generate-notes
-    environment:
-      GH_TOKEN:
+  - name: github-release
+    image: woodpeckerci/plugin-release:0.3.1
+    settings:
+      api_key:
         from_secret: github_access_token
+      files:
+        - target/execlauncher.jar
+      checksum: sha256
+      checksum-flatten: true
+      title: ${CI_COMMIT_TAG}
+      draft: false
+      file_exists: overwrite
+      overwrite: true

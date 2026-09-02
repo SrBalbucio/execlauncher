@@ -77,6 +77,7 @@ public class CreateOrUpdatePNPMExecutable {
         }
         tokens.add("run");
         tokens.add(scriptName);
+        executable.setType("PNPM");
         executable.setCmd(CommandLineUtils.joinQuoted(tokens));
 
         Executor.getInstance().addExecutable(executable);

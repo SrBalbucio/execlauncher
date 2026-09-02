@@ -39,6 +39,8 @@ public class Executable {
     @Expose
     private String type;
     @Expose
+    private String scriptFile;
+    @Expose
     private boolean autoShowLogs;
     private BufferedWriter outputWriter;
     private InputStream errorStream;

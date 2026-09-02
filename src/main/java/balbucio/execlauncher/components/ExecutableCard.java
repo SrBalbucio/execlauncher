@@ -3,8 +3,11 @@ package balbucio.execlauncher.components;
 import balbucio.execlauncher.Executor;
 import balbucio.execlauncher.Main;
 import balbucio.execlauncher.Storage;
+import balbucio.execlauncher.action.CreateOrUpdateBashExecutable;
+import balbucio.execlauncher.action.CreateOrUpdateCmdExecutable;
 import balbucio.execlauncher.action.CreateOrUpdateJavaExecutable;
 import balbucio.execlauncher.action.CreateOrUpdatePNPMExecutable;
+import balbucio.execlauncher.action.CreateOrUpdateShellExecutable;
 import balbucio.execlauncher.model.Executable;
 import balbucio.execlauncher.utils.CommandLineUtils;
 import balbucio.execlauncher.utils.FileUtils;
@@ -112,7 +115,12 @@ public class ExecutableCard extends JPanel {
 
     private String typeIcon() {
         String type = executable.getType();
-        if (type != null && type.equalsIgnoreCase("PNPM")) return "📦";
+        if (type != null) {
+            if (type.equalsIgnoreCase("PNPM")) return "📦";
+            if (type.equalsIgnoreCase("BASH")) return "📜";
+            if (type.equalsIgnoreCase("CMD")) return "🪟";
+            if (type.equalsIgnoreCase("SHELL")) return "💻";
+        }
         return "☕";
     }
 
@@ -168,11 +176,25 @@ public class ExecutableCard extends JPanel {
     }
 
     private void openEditor() {
-        if (executable.getType() != null && executable.getType().equalsIgnoreCase("PNPM")) {
-            new CreateOrUpdatePNPMExecutable(executable);
-        } else {
-            new CreateOrUpdateJavaExecutable(executable);
+        if (executable.getType() != null) {
+            if (executable.getType().equalsIgnoreCase("PNPM")) {
+                new CreateOrUpdatePNPMExecutable(executable);
+                return;
+            }
+            if (executable.getType().equalsIgnoreCase("BASH")) {
+                new CreateOrUpdateBashExecutable(executable);
+                return;
+            }
+            if (executable.getType().equalsIgnoreCase("CMD")) {
+                new CreateOrUpdateCmdExecutable(executable);
+                return;
+            }
+            if (executable.getType().equalsIgnoreCase("SHELL")) {
+                new CreateOrUpdateShellExecutable(executable);
+                return;
+            }
         }
+        new CreateOrUpdateJavaExecutable(executable);
     }
 
     public JPopupMenu getPopupMenu() {

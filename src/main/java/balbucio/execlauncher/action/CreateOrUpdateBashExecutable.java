@@ -4,7 +4,6 @@ import balbucio.execlauncher.Executor;
 import balbucio.execlauncher.Main;
 import balbucio.execlauncher.model.Executable;
 import balbucio.execlauncher.utils.CommandLineUtils;
-import balbucio.execlauncher.utils.JavaUtils;
 import de.milchreis.uibooster.model.Form;
 
 import javax.swing.*;
@@ -14,41 +13,32 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CreateOrUpdateJavaExecutable {
+public class CreateOrUpdateBashExecutable {
 
     private final Main main;
     private final Executable executable;
-    private File jarPath;
+    private File scriptFile;
 
-    public CreateOrUpdateJavaExecutable() {
+    public CreateOrUpdateBashExecutable() {
         this(new Executable());
     }
 
-    public CreateOrUpdateJavaExecutable(Executable executable) {
+    public CreateOrUpdateBashExecutable(Executable executable) {
         this.executable = executable;
         this.main = Main.instance;
 
-        List<String> javaHomes = new ArrayList<>(JavaUtils.getJavaAvailable().values());
-        if (javaHomes.isEmpty()) {
-            javaHomes.add(System.getProperty("java.home"));
-        }
-
         Form form = main.getUi()
-                .createForm("Create or update an executable")
+                .createForm("Create or update a Bash executable")
                 .addText("Executable Name:", executable.getName() != null ? executable.getName() : "")
-                .addSelection("Select Java Home:", javaHomes)
+                .addText("Bash command / args:", currentCommand() != null ? currentCommand() : "")
                 .addButton("Select workspace path", this::selectWorkspacePath)
-                .addButton("Select JAR File", this::selectJar)
+                .addButton("Select Bash Script (.sh)", this::selectScript)
                 .addButton("Manage environment variables", executable::showVars)
                 .addButton("Manage command line options", executable::showOptions)
                 .show();
 
         executable.setName(form.getByIndex(0).asString());
-        String javaHome = form.getByIndex(1).asString();
-
-        if (javaHome == null || javaHome.isBlank()) {
-            javaHome = System.getProperty("java.home");
-        }
+        String command = form.getByIndex(1).asString();
 
         if (executable.getName() == null || executable.getName().isBlank()) {
             main.getUi().showErrorDialog("There is missing data; please check that you entered the name correctly.", "Execlauncher cannot create a new executable.");
@@ -60,75 +50,79 @@ public class CreateOrUpdateJavaExecutable {
             return;
         }
 
-        File javaHomeFile = new File(javaHome, "bin/" + JavaUtils.javaExecutableName());
-
-        if (!javaHomeFile.exists()) {
-            main.getUi().showErrorDialog("Java Home " + javaHome + " does not have " + javaHomeFile.getName() + " available. Please verify that the Java version listed is higher than 8 and is not the version included in installable applications.", "Execlauncher cannot create a new executable.");
-            return;
-        }
-
-        String jarArgument = jarArgument();
-        if (jarArgument == null || jarArgument.isBlank()) {
-            main.getUi().showErrorDialog("Please select the JAR file.", "Execlauncher cannot create a new executable.");
-            return;
-        }
-
         List<String> tokens = new ArrayList<>();
-        tokens.add(javaHomeFile.getAbsolutePath());
-        tokens.add("-jar");
-        tokens.add(jarArgument);
+
+        if (scriptFile != null) {
+            Path scriptAbsolute = scriptFile.toPath().toAbsolutePath().normalize();
+            Path workspaceAbsolute = executable.getFilePath().toPath().toAbsolutePath().normalize();
+            String scriptArg;
+            if (scriptAbsolute.startsWith(workspaceAbsolute)) {
+                scriptArg = workspaceAbsolute.relativize(scriptAbsolute).toString();
+            } else {
+                scriptArg = scriptAbsolute.toString();
+            }
+            tokens.add("bash");
+            tokens.add(scriptArg);
+            if (command != null && !command.isBlank()) {
+                tokens.addAll(CommandLineUtils.parse(command));
+            }
+        } else {
+            if (command == null || command.isBlank()) {
+                main.getUi().showErrorDialog("Please inform the bash command or select a script file.", "Execlauncher cannot create a new executable.");
+                return;
+            }
+            List<String> parsed = CommandLineUtils.parse(command);
+            if (!parsed.isEmpty() && parsed.get(0).equals("bash")) {
+                tokens.addAll(parsed);
+            } else {
+                tokens.add("bash");
+                tokens.add("-c");
+                tokens.add(command);
+            }
+        }
+
+        executable.setType("BASH");
         executable.setCmd(CommandLineUtils.joinQuoted(tokens));
-        executable.setType("Java");
 
         Executor.getInstance().addExecutable(executable);
     }
 
-    private String jarArgument() {
-        if (jarPath != null) {
-            Path jarAbsolute = jarPath.toPath().toAbsolutePath().normalize();
-            Path workspaceAbsolute = executable.getFilePath().toPath().toAbsolutePath().normalize();
-            if (jarAbsolute.startsWith(workspaceAbsolute)) {
-                return workspaceAbsolute.relativize(jarAbsolute).toString();
-            }
-            return jarAbsolute.getFileName().toString();
-        }
-
+    private String currentCommand() {
+        if (executable.getCmd() == null || executable.getCmd().isBlank()) return null;
         List<String> tokens = CommandLineUtils.parse(executable.getCmd());
-        int idx = tokens.indexOf("-jar");
-        if (idx >= 0 && idx + 1 < tokens.size()) {
-            return tokens.get(idx + 1);
+        if (tokens.isEmpty()) return null;
+        if (tokens.get(0).equals("bash")) {
+            if (tokens.size() >= 3 && tokens.get(1).equals("-c")) {
+                return tokens.get(2);
+            } else if (tokens.size() >= 2) {
+                return String.join(" ", tokens.subList(1, tokens.size()));
+            }
         }
-        return null;
+        return executable.getCmd();
     }
 
     public void selectWorkspacePath() {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-
         if (executable.getPath() != null) {
             chooser.setCurrentDirectory(executable.getFilePath());
         }
-
         chooser.showOpenDialog(main.getMainFrame());
-
         if (chooser.getSelectedFile() != null) {
             executable.setPath(chooser.getSelectedFile().getAbsolutePath());
         }
     }
 
-    public void selectJar() {
+    public void selectScript() {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        chooser.setFileFilter(new FileNameExtensionFilter("JAR Files", "jar"));
-
+        chooser.setFileFilter(new FileNameExtensionFilter("Shell Scripts", "sh", "bash"));
         if (executable.getPath() != null) {
             chooser.setCurrentDirectory(executable.getFilePath());
         }
-
         chooser.showOpenDialog(main.getMainFrame());
-
         if (chooser.getSelectedFile() != null) {
-            this.jarPath = chooser.getSelectedFile();
+            this.scriptFile = chooser.getSelectedFile();
             try {
                 executable.setCmd(chooser.getSelectedFile().getCanonicalPath());
             } catch (Exception e) {
